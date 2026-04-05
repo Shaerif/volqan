@@ -20,6 +20,6 @@
     "@volqan/core": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "workspace:*"
+    "typescript": "^5.9.0"
   }
 }

@@ -12,31 +12,13 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build all packages
-        run: pnpm --recursive run build --if-present
 
       - name: Extract version from tag
         id: version
@@ -49,13 +31,16 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
           if [ -z "$PREV_TAG" ]; then
-            echo "CHANGELOG=Initial release of Volqan ${{ steps.version.outputs.VERSION }}." >> "$GITHUB_OUTPUT"
-          else
-            CHANGELOG=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges)
-            # Use a delimiter to support multi-line output
             {
               echo "CHANGELOG<<EOF"
-              echo "$CHANGELOG"
+              echo "Initial release of Volqan ${{ steps.version.outputs.VERSION }}."
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "CHANGELOG<<EOF"
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges
+              echo ""
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
           fi
@@ -83,6 +68,20 @@ jobs:
               `Changelog: https://volqan.dev/changelog`,
             ].join('\n');
 
+            // Check if release already exists for this tag
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                tag:   tag,
+              });
+              console.log(`Release for tag ${tag} already exists (id: ${existing.data.id}). Skipping creation.`);
+              return;
+            } catch (e) {
+              if (e.status !== 404) throw e;
+              // 404 means no release exists — proceed to create one
+            }
+
             await github.rest.repos.createRelease({
               owner:            context.repo.owner,
               repo:             context.repo.repo,
@@ -93,6 +92,8 @@ jobs:
               prerelease:       isPrerelease,
               generate_release_notes: false,
             });
+
+            console.log(`Release created for ${tag}`);
         env:
           CHANGELOG: ${{ steps.changelog.outputs.CHANGELOG }}
 
