@@ -1,0 +1,68 @@
+import { defineConfig } from '@volqan/core';
+
+export default defineConfig({
+  /**
+   * Database configuration.
+   * The DATABASE_URL is read from environment variables.
+   */
+  database: {
+    provider: '{{DB_PROVIDER}}',
+    url: process.env.DATABASE_URL!,
+  },
+
+  /**
+   * Authentication configuration.
+   */
+  auth: {
+    jwt: {
+      secret: process.env.JWT_SECRET!,
+      expiresIn: '7d',
+    },
+    providers: [
+      {{#if AUTH_GOOGLE}}
+      {
+        id: 'google',
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      },
+      {{/if}}
+      {{#if AUTH_GITHUB}}
+      {
+        id: 'github',
+        clientId: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      },
+      {{/if}}
+    ],
+  },
+
+  /**
+   * Admin panel configuration.
+   */
+  admin: {
+    path: '/admin',
+    title: '{{PROJECT_NAME}} Admin',
+  },
+
+  /**
+   * Extensions directory.
+   * Place extension packages here or install from Bazarix (https://bazarix.dev).
+   */
+  extensionsDir: './extensions',
+
+  /**
+   * Themes directory.
+   * Place theme packages here or install from Bazarix (https://bazarix.dev).
+   */
+  themesDir: './themes',
+
+  /**
+   * Media storage configuration.
+   */
+  storage: {
+    provider: 'local',
+    local: {
+      uploadDir: './public/uploads',
+    },
+  },
+});

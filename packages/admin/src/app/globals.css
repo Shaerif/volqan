@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* Volqan Admin — base CSS custom properties */
+:root {
+  --background: 0 0% 98%;
+  --foreground: 224 71% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  --primary: 220 90% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 9% 46%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 220 9% 26%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 220 90% 56%;
+  --radius: 0.5rem;
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 60px;
+  --topbar-height: 56px;
+  --volqan-color-primary: #3b82f6;
+  --volqan-color-secondary: #64748b;
+  --volqan-color-accent: #f59e0b;
+  --volqan-color-background: #f8fafc;
+  --volqan-color-surface: #ffffff;
+  --volqan-color-text-primary: #0f172a;
+  --volqan-color-text-secondary: #475569;
+  --volqan-color-text-muted: #94a3b8;
+  --volqan-color-border: #e2e8f0;
+  --volqan-font-sans: "Inter", system-ui, sans-serif;
+  --volqan-font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.dark {
+  --background: 224 71% 4%;
+  --foreground: 213 31% 91%;
+  --card: 222 47% 7%;
+  --card-foreground: 213 31% 91%;
+  --popover: 222 47% 7%;
+  --popover-foreground: 213 31% 91%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 4%;
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 215 20% 65%;
+  --muted: 223 47% 11%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 222 47% 11%;
+  --accent-foreground: 213 31% 91%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 213 31% 91%;
+  --border: 216 34% 17%;
+  --input: 216 34% 17%;
+  --ring: 217 91% 60%;
+  --volqan-color-primary: #60a5fa;
+  --volqan-color-secondary: #94a3b8;
+  --volqan-color-accent: #fbbf24;
+  --volqan-color-background: #0f172a;
+  --volqan-color-surface: #1e293b;
+  --volqan-color-text-primary: #f1f5f9;
+  --volqan-color-text-secondary: #94a3b8;
+  --volqan-color-text-muted: #475569;
+  --volqan-color-border: #1e293b;
+}
+
+* {
+  border-color: hsl(var(--border));
+  box-sizing: border-box;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--volqan-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Admin layout grid */
+.admin-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Focus visible ring */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Attribution footer */
+.attribution-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+  border-top: 1px solid hsl(var(--border));
+  background-color: hsl(var(--card));
+  user-select: none;
+}
+
+.attribution-footer__link {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.attribution-footer__link:hover {
+  text-decoration: underline;
+}

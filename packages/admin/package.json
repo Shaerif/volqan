@@ -6,23 +6,39 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
-    "dev": "tsc -w -p tsconfig.json",
-    "build": "tsc -p tsconfig.json",
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --test",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist .next"
   },
   "dependencies": {
-    "@volqan/core": "workspace:*"
+    "@volqan/core": "workspace:*",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.487.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.2.0",
+    "next-themes": "^0.4.4"
+  },
+  "devDependencies": {
+    "typescript": "workspace:*",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/node": "^22.14.1",
+    "tailwindcss": "^4.1.4",
+    "@tailwindcss/postcss": "^4.1.4",
+    "postcss": "^8.5.3",
+    "autoprefixer": "^10.4.21"
   },
   "peerDependencies": {
     "react": ">=18"
-  },
-  "devDependencies": {
-    "typescript": "workspace:*"
   }
 }

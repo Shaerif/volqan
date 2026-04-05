@@ -1,0 +1,164 @@
+version: "3.9"
+
+# =============================================================================
+# Volqan — Production Docker Compose
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Before deploying:
+#   1. Create a .env.prod file with production secrets
+#   2. Set DATABASE_URL to your production database
+#   3. Generate a strong JWT_SECRET
+#   4. Configure your domain in the nginx service (if using)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Volqan application — production build
+  # ---------------------------------------------------------------------------
+  volqan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner           # Use the lean production runner stage
+    image: volqan:production
+    container_name: volqan-app-prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.prod              # Production secrets — never commit this file
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      ADMIN_PORT: "3001"
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - volqan-uploads-prod:/app/public/uploads
+    networks:
+      - volqan-prod-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "128M"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL database — production
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: volqan-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-volqan}"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # Do NOT expose port 5432 in production — internal network only
+    expose:
+      - "5432"
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+      - ./scripts/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - volqan-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+        reservations:
+          cpus: "0.1"
+          memory: "64M"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-volqan}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Database backup service (runs periodically)
+  # ---------------------------------------------------------------------------
+  db-backup:
+    image: postgres:16-alpine
+    container_name: volqan-db-backup
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: "${POSTGRES_DB:-volqan}"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      PGPASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
+    volumes:
+      - volqan-backups-prod:/backups
+    networks:
+      - volqan-prod-network
+    # Run pg_dump every 24 hours, keep last 7 days of backups
+    command: >
+      sh -c "while true; do
+        TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+        pg_dump -h postgres -U $$POSTGRES_USER $$POSTGRES_DB
+          > /backups/volqan_backup_$$TIMESTAMP.sql;
+        echo \"Backup created: volqan_backup_$$TIMESTAMP.sql\";
+        find /backups -name 'volqan_backup_*.sql' -mtime +7 -delete;
+        sleep 86400;
+      done"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres-data-prod:
+    driver: local
+  volqan-uploads-prod:
+    driver: local
+  volqan-backups-prod:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  volqan-prod-network:
+    driver: bridge
+    # Use encryption for overlay networks in Docker Swarm
+    # driver_opts:
+    #   encrypted: "true"
